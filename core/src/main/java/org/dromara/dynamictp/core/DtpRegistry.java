@@ -188,6 +188,7 @@ public class DtpRegistry extends OnceApplicationContextEventListener {
             throw new IllegalArgumentException("DynamicTp refresh, invalid parameters exist, properties: " + props);
         }
         TpMainFields oldFields = ExecutorConverter.toMainFields(executorWrapper);
+        // 1、真正的刷新逻辑
         doRefresh(executorWrapper, props);
         TpMainFields newFields = ExecutorConverter.toMainFields(executorWrapper);
         if (oldFields.equals(newFields)) {
@@ -195,6 +196,7 @@ public class DtpRegistry extends OnceApplicationContextEventListener {
                     executorWrapper.getThreadPoolName());
             return;
         }
+        // 2、获取变化的key，用于通知和打日志
         // Get the changed keys
         List<FieldInfo> diffFields = EQUATOR.getDiffFields(oldFields, newFields);
         List<String> diffKeys = StreamUtil.fetchProperty(diffFields, FieldInfo::getFieldName);
@@ -214,7 +216,9 @@ public class DtpRegistry extends OnceApplicationContextEventListener {
 
     private static void doRefresh(ExecutorWrapper executorWrapper, DtpExecutorProps props) {
         ExecutorAdapter<?> executor = executorWrapper.getExecutor();
+        // 1、重新设置 corePoolSize 和 maxPoolSize
         doRefreshPoolSize(executor, props);
+        // 2、设置keepLiveTime 和 allowCoreThreadTimeOut
         if (!Objects.equals(executor.getKeepAliveTime(props.getUnit()), props.getKeepAliveTime())) {
             executor.setKeepAliveTime(props.getKeepAliveTime(), props.getUnit());
         }
@@ -222,12 +226,15 @@ public class DtpRegistry extends OnceApplicationContextEventListener {
             executor.allowCoreThreadTimeOut(props.isAllowCoreThreadTimeOut());
         }
         // update queue
+        // 3、更新队列相关的属性
         updateQueueProps(executor, props);
 
+        // 4、如果是 DtpExecutor，则更新 DtpExecutor 独有的属性，如 队列超时，运行超时等
         if (executor instanceof DtpExecutor) {
             doRefreshDtp(executorWrapper, props);
             return;
         }
+        // 5、更新线程池的通用属性，如 线程池别名，拒绝策略等，还更新了通知相关的配置
         doRefreshCommon(executorWrapper, props);
     }
 

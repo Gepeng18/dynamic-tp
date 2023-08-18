@@ -46,13 +46,17 @@ public class NotifyFilterBuilder {
     private NotifyFilterBuilder() { }
 
     public static InvokerChain<BaseNotifyCtx> getAlarmInvokerChain() {
+        // 1、读取所有的 NotifyFilter
         val filters = ApplicationContextHolder.getBeansOfType(NotifyFilter.class);
         Collection<NotifyFilter> alarmFilters = Lists.newArrayList(filters.values());
+        // 2、再加上 AlarmBaseFilter
         alarmFilters.add(new AlarmBaseFilter());
+        // 3、过滤出支持 ALARM 的消息过滤器
         alarmFilters = alarmFilters.stream()
                 .filter(x -> x.supports(NotifyTypeEnum.ALARM))
                 .sorted(Comparator.comparing(Filter::getOrder))
                 .collect(Collectors.toList());
+        // 4、构建过滤器链
         return InvokerChainFactory.buildInvokerChain(new AlarmInvoker(), alarmFilters.toArray(new NotifyFilter[0]));
     }
 

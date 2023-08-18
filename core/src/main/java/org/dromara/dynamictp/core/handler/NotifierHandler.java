@@ -48,9 +48,11 @@ public final class NotifierHandler {
     private static final Map<String, DtpNotifier> NOTIFIERS = new HashMap<>();
 
     private NotifierHandler() {
+        // 1、调用SPI加载 DtpNotifier
         List<DtpNotifier> loadedNotifiers = ExtensionServiceLoader.get(DtpNotifier.class);
         loadedNotifiers.forEach(notifier -> NOTIFIERS.put(notifier.platform(), notifier));
 
+        // 2、加载内置的 DtpNotifier， 如 钉钉，微信，lark
         DtpNotifier dingNotifier = new DtpDingNotifier(new DingNotifier());
         DtpNotifier wechatNotifier = new DtpWechatNotifier(new WechatNotifier());
         DtpNotifier larkNotifier = new DtpLarkNotifier(new LarkNotifier());
@@ -60,9 +62,11 @@ public final class NotifierHandler {
     }
 
     public void sendNotice(TpMainFields oldFields, List<String> diffs) {
+        // 先获取 该线程池支持的通知相关配置
         NotifyItem notifyItem = DtpNotifyCtxHolder.get().getNotifyItem();
         for (String platformId : notifyItem.getPlatformIds()) {
             NotifyHelper.getPlatform(platformId).ifPresent(p -> {
+                // 查看该线程池配置的platformId的平台是否被现有项目支持，如果支持，则调用该通知的sendChangeMsg方法
                 DtpNotifier notifier = NOTIFIERS.get(p.getPlatform().toLowerCase());
                 if (notifier != null) {
                     notifier.sendChangeMsg(p, oldFields, diffs);

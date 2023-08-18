@@ -102,6 +102,7 @@ public class NotifyHelper {
         return keys;
     }
 
+    // 返回线程池支持的该消息类型的相关配置信息
     public static Optional<NotifyItem> getNotifyItem(ExecutorWrapper executor, NotifyItemEnum notifyType) {
         if (CollectionUtils.isEmpty(executor.getNotifyItems())) {
             return Optional.empty();
@@ -131,11 +132,13 @@ public class NotifyHelper {
         });
     }
 
+    // 从配置文件中读取所有通知相关的配置
     public static Optional<NotifyPlatform> getPlatform(String platformId) {
         Map<String, NotifyPlatform> platformMap = getAllPlatforms();
         return Optional.ofNullable(platformMap.get(platformId));
     }
 
+    // 从配置文件中读取所有通知相关的配置
     public static Map<String, NotifyPlatform> getAllPlatforms() {
         val dtpProperties = ApplicationContextHolder.getBean(DtpProperties.class);
         if (CollectionUtils.isEmpty(dtpProperties.getPlatforms())) {

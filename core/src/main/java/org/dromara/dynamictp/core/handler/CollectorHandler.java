@@ -42,9 +42,11 @@ public final class CollectorHandler {
     private static final Map<String, MetricsCollector> COLLECTORS = Maps.newHashMap();
 
     private CollectorHandler() {
+        // 1、先通过SPI进行加载
         List<MetricsCollector> loadedCollectors = ExtensionServiceLoader.get(MetricsCollector.class);
         loadedCollectors.forEach(collector -> COLLECTORS.put(collector.type(), collector));
 
+        // 2、再加载系统内置的收集器
         MetricsCollector microMeterCollector = new MicroMeterCollector();
         LogCollector logCollector = new LogCollector();
         InternalLogCollector internalLogCollector = new InternalLogCollector();
@@ -58,6 +60,7 @@ public final class CollectorHandler {
             return;
         }
         for (String collectorType : types) {
+            // 轮训调用所支持的收集器，搜集线程池信息
             MetricsCollector collector = COLLECTORS.get(collectorType.toLowerCase());
             if (collector != null) {
                 collector.collect(poolStats);

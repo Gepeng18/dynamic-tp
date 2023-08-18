@@ -44,6 +44,7 @@ public class RejectHandlerGetter {
     private RejectHandlerGetter() { }
 
     public static RejectedExecutionHandler buildRejectedHandler(String name) {
+        // 1、先匹配系统提供的拒绝策略
         if (Objects.equals(name, ABORT_POLICY.getName())) {
             return new ThreadPoolExecutor.AbortPolicy();
         } else if (Objects.equals(name, CALLER_RUNS_POLICY.getName())) {
@@ -53,6 +54,7 @@ public class RejectHandlerGetter {
         } else if (Objects.equals(name, DISCARD_POLICY.getName())) {
             return new ThreadPoolExecutor.DiscardPolicy();
         }
+        // 2、如果系统提供的拒绝策略匹配不到，再匹配SPI机制提供的拒绝策略
         List<RejectedExecutionHandler> loadedHandlers = ExtensionServiceLoader.get(RejectedExecutionHandler.class);
         for (RejectedExecutionHandler handler : loadedHandlers) {
             String handlerName = handler.getClass().getSimpleName();
@@ -69,6 +71,7 @@ public class RejectHandlerGetter {
         return getProxy(buildRejectedHandler(name));
     }
 
+    // 对拒绝策略进行增强，在原本的拒绝策略基础上增加 RejectedAware.beforeReject 方法，如alarm，统计计数等
     public static RejectedExecutionHandler getProxy(RejectedExecutionHandler handler) {
         return (RejectedExecutionHandler) Proxy
                 .newProxyInstance(handler.getClass().getClassLoader(),

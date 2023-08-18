@@ -64,8 +64,11 @@ public class DtpMonitor extends OnceApplicationContextEventListener {
     }
 
     private void run() {
+        // 1、获取所有的线程池的名字
         Set<String> executorNames = DtpRegistry.listAllExecutorNames();
+        // 2、报警
         checkAlarm(executorNames);
+        // 3、收集线程池信息
         collect(executorNames);
     }
 

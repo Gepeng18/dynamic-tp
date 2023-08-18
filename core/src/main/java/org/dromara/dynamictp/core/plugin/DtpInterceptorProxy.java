@@ -45,8 +45,10 @@ public class DtpInterceptorProxy implements MethodInterceptor {
 
     @Override
     public Object intercept(Object object, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        // 进行方法的过滤
         Set<Method> methods = signatureMap.get(method.getDeclaringClass());
         if (CollectionUtils.isNotEmpty(methods) && methods.contains(method)) {
+            // 调用 interceptor的intercept方法
             return interceptor.intercept(new DtpInvocation(target, method, args));
         }
 

@@ -65,7 +65,9 @@ public abstract class AbstractRefresher implements Refresher, EnvironmentAware {
 
         try {
             val configHandler = ConfigHandler.getInstance();
+            // 将 content 根据 ConfigFileTypeEnum 的类型（json?xml?properties?yml?）反序列化成properties
             val properties = configHandler.parseConfig(content, fileType);
+            // 刷新线程池
             refresh(properties);
         } catch (IOException e) {
             log.error("DynamicTp refresh error, content: {}, fileType: {}", content, fileType, e);
@@ -77,7 +79,9 @@ public abstract class AbstractRefresher implements Refresher, EnvironmentAware {
             log.warn("DynamicTp refresh, empty properties.");
             return;
         }
+        // 1、将properties数据写到dtpProperties中
         BinderHelper.bindDtpProperties(properties, dtpProperties);
+        // 2、根据dtpProperties刷新本地的线程池
         doRefresh(dtpProperties);
     }
 
@@ -87,7 +91,9 @@ public abstract class AbstractRefresher implements Refresher, EnvironmentAware {
     }
 
     protected void doRefresh(DtpProperties properties) {
+        // 1、刷新本地的线程池
         DtpRegistry.refresh(properties);
+        // 2、发布刷新事件
         publishEvent(properties);
     }
 

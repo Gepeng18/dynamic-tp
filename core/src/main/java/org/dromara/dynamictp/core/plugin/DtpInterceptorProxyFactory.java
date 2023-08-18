@@ -38,11 +38,17 @@ public class DtpInterceptorProxyFactory {
         return enhance(target, null, null, interceptor);
     }
 
+    /**
+     * 标注 {@see DtpIntercepts} 注解的拦截器对方法进行增强
+     */
     public static Object enhance(Object target, Class<?>[] argumentTypes, Object[] arguments, DtpInterceptor interceptor) {
+        // 先获取需要对那些方法进行增强
         Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
+        // 不包含，就不进行增强
         if (!signatureMap.containsKey(target.getClass())) {
             return target;
         }
+        // 增强
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(target.getClass());
         enhancer.setCallback(new DtpInterceptorProxy(target, interceptor, signatureMap));
@@ -52,6 +58,9 @@ public class DtpInterceptorProxyFactory {
         return enhancer.create(argumentTypes, arguments);
     }
 
+    /**
+     * 根据DtpInterceptor上的DtpIntercepts注解中的DtpSignature注解列表，判断需要对哪些类的那些方法进行增强
+     */
     private static Map<Class<?>, Set<Method>> getSignatureMap(DtpInterceptor interceptor) {
         DtpIntercepts interceptsAnno = interceptor.getClass().getAnnotation(DtpIntercepts.class);
         if (interceptsAnno == null) {
